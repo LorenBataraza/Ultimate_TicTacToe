@@ -1,262 +1,265 @@
+"""
+Ultimate TicTacToe - Versión Corregida
+Correcciones:
+- Eliminada sobrecarga de métodos (Python no la soporta)
+- Corregido orden de cambio de turno en make_move
+- Corregido is_move_valid para verificar celda vacía
+- Corregido winner_announcement
+"""
 from enum import Enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
+from dataclasses import dataclass
 
-# Other CONSTANTS
-COLS=3
-ROWS=3
-SQRS_PER_GAME = 9 
-TEAMS=2
-CELL_STATEs = 3
+COLS = 3
+ROWS = 3
+
 
 class CellState(Enum):
-    BLANK = " " 
+    BLANK = " "
     CROSS = "X"
     CIRCLE = "O"
 
+
+@dataclass
 class Move:
-    def __init__(self, row: int, col: int, player: CellState):
-        self.row = row
-        self.col = col
-        self.player = player
+    row: int
+    col: int
+    player: CellState
+
+
+@dataclass
+class UltimateMove:
+    board_row: int
+    board_col: int
+    cell_row: int
+    cell_col: int
+    player: CellState
+
 
 class TicTacToe:
     def __init__(self):
-        # Inicializar un tablero 3x3 con celdas vacías
-        self.board = [[CellState.BLANK for _ in range(COLS)] for _ in range(ROWS)]
-        
-        # None= no determinado
-        # Blank = Empate 
+        self.board: List[List[CellState]] = [
+            [CellState.BLANK for _ in range(COLS)] for _ in range(ROWS)
+        ]
         self.winner: Optional[CellState] = None
 
-    def check_winner(self):
-        # Verificar filas
+    def check_winner(self) -> Optional[CellState]:
+        """Verifica si hay ganador o empate."""
+        # Filas
         for i in range(ROWS):
             if self.board[i][0] == self.board[i][1] == self.board[i][2] != CellState.BLANK:
                 self.winner = self.board[i][0]
-                return
+                return self.winner
 
-        # Verificar columnas
+        # Columnas
         for j in range(COLS):
             if self.board[0][j] == self.board[1][j] == self.board[2][j] != CellState.BLANK:
                 self.winner = self.board[0][j]
-                return
+                return self.winner
 
-        # Verificar diagonales
+        # Diagonales
         if self.board[0][0] == self.board[1][1] == self.board[2][2] != CellState.BLANK:
             self.winner = self.board[0][0]
-            return
+            return self.winner
         if self.board[0][2] == self.board[1][1] == self.board[2][0] != CellState.BLANK:
             self.winner = self.board[0][2]
-            return
+            return self.winner
 
-        # Verificar empate
+        # Empate
         if all(self.board[i][j] != CellState.BLANK for i in range(3) for j in range(3)):
-            self.winner = CellState.BLANK  # Empate
+            self.winner = CellState.BLANK
+            return self.winner
 
-    def display(self) -> None:
-            """Muestra el tablero en consola."""
-            for row in self.board:
-                print("|".join(cell.value for cell in row))
-                print("-" * 5)
-            print("\n")
+        return None
 
-
-    def is_move_valid(self, row: int, col: int, player: CellState) -> bool:
-        """Chequea si el moviento es válido"""
+    def is_move_valid(self, row: int, col: int) -> bool:
+        """Verifica si un movimiento es válido."""
         if self.winner is not None:
-            return False  # Juego terminado
-        if 0 <= row < ROWS and 0 <= col < COLS and self.board[row][col] == CellState.BLANK:
-            return True
-        
-    def is_move_valid(self, move: Move) -> bool:
-        """Chequea si el moviento es válido"""
-        return 0 <= move.row < ROWS and 0 <= move.col < COLS and self.board[move.row][move.col] == CellState.BLANK and not self.winner
+            return False
+        if not (0 <= row < ROWS and 0 <= col < COLS):
+            return False
+        return self.board[row][col] == CellState.BLANK
 
     def make_move(self, row: int, col: int, player: CellState) -> bool:
-        """Realiza una jugada en la posición (row, col) si es válida."""
-        if self.is_move_valid(row, col, player):
-            self.board[row][col] = player
-            self.check_winner()
-            return True
-        return False
+        """Realiza un movimiento si es válido."""
+        if not self.is_move_valid(row, col):
+            return False
+        self.board[row][col] = player
+        self.check_winner()
+        return True
 
-    def make_move(self, move: Move) -> bool:
-        """Realiza una jugada en la posición (row, col) si es válida."""
-        if self.is_move_valid(move):
-            self.board[move.row][move.col] = move.player
-            self.check_winner()
-            return True
-        return False
-    
-    def winner_annoucement(self):
-        if self.game.winner:
-            print("The winner is", self.game.winner.value)
-        else:
-            print("There is no winner yet!.")
+    def display(self) -> str:
+        """Retorna representación string del tablero."""
+        lines = []
+        for i, row in enumerate(self.board):
+            lines.append(" │ ".join(cell.value for cell in row))
+            if i < 2:
+                lines.append("──┼───┼──")
+        return "\n".join(lines)
 
-
-class UltimateMove:
-    def __init__(self, board_row: int, board_col: int, cell_row: int, cell_col: int, player: CellState):
-        self.board_row = board_row
-        self.board_col = board_col
-        self.cell_row = cell_row
-        self.cell_col = cell_col
-        self.player = player
 
 class UltimateTicTacToe:
     def __init__(self):
-        # Cuadrícula de 3x3 de tableros pequeños
-        self.boards = [[TicTacToe() for _ in range(COLS)] for _ in range(ROWS)]
-        # Meta-tablero para rastrear ganadores
+        self.boards: List[List[TicTacToe]] = [
+            [TicTacToe() for _ in range(COLS)] for _ in range(ROWS)
+        ]
         self.meta_board = TicTacToe()
-        # Tablero activo: None significa cualquier tablero es válido
-        self.active_board = None
-        # Ganador total
-        self.winner = None
-        # Mantengo esta variable para no imprimir el tablero si la jugada era mala.
-        self.valid_last_move=True
-        # Turn - Empieza Cruz
-        self.current_player=CellState.CROSS;
+        self.active_board: Optional[Tuple[int, int]] = None
+        self.winner: Optional[CellState] = None
+        self.current_player: CellState = CellState.CROSS
+        self.move_history: List[UltimateMove] = []
 
-    # Reset works as initiation
-    reset = __init__
+    def reset(self):
+        """Reinicia el juego."""
+        self.__init__()
 
+    def get_valid_boards(self) -> List[Tuple[int, int]]:
+        """Retorna lista de tableros donde se puede jugar."""
+        if self.active_board is not None:
+            br, bc = self.active_board
+            # Si el tablero activo no está terminado, solo ese es válido
+            if self.boards[br][bc].winner is None:
+                return [self.active_board]
+        
+        # Si no hay tablero activo o el activo está terminado,
+        # cualquier tablero no terminado es válido
+        valid = []
+        for i in range(3):
+            for j in range(3):
+                if self.boards[i][j].winner is None:
+                    valid.append((i, j))
+        return valid
 
     def is_move_valid(self, move: UltimateMove) -> bool:
-        """Chequea si el moviento es válido"""
+        """Verifica si el movimiento es válido."""
+        # Juego terminado
         if self.winner is not None:
-            return False  # Juego terminado
-
-        if self.current_player is not move.player:
             return False
-        
+
+        # Turno incorrecto
+        if self.current_player != move.player:
+            return False
+
+        # Coordenadas fuera de rango
+        if not (0 <= move.board_row < 3 and 0 <= move.board_col < 3):
+            return False
+        if not (0 <= move.cell_row < 3 and 0 <= move.cell_col < 3):
+            return False
+
         # Verificar si el tablero elegido es válido
-        if self.active_board is None or self.boards[self.active_board[0]][self.active_board[1]].winner is not None:
-            # Cualquier tablero es permitido
-            return True
-        else:
-            # Debe jugar en el tablero activo
-            if (move.board_row, move.board_col) != self.active_board:
-                self.valid_last_move= False
-                print("Wrong movement!!\n")
-                return False
-        return True
+        valid_boards = self.get_valid_boards()
+        if (move.board_row, move.board_col) not in valid_boards:
+            return False
+
+        # Verificar si la celda está vacía
+        small_board = self.boards[move.board_row][move.board_col]
+        return small_board.board[move.cell_row][move.cell_col] == CellState.BLANK
 
     def make_move(self, move: UltimateMove) -> bool:
         """Realiza un movimiento si es válido."""
-        if self.is_move_valid(move):
-            # Cambio turno
-            self.current_player = CellState.CROSS if self.current_player == CellState.CIRCLE else CellState.CIRCLE
-            # Realizar el movimiento en el tablero pequeño
-            small_board = self.boards[move.board_row][move.board_col]
-            small_move = Move(move.cell_row, move.cell_col, move.player)
-            if small_board.make_move(small_move):
-                # Movimiento exitoso, actualizar tablero activo
-                self.active_board = (move.cell_row, move.cell_col)
-                self.valid_last_move= True
-
-                # Verificar si el tablero pequeño tiene ganador
-                small_winner = small_board.winner
-                if small_winner in [CellState.CROSS, CellState.CIRCLE]:
-                    self.meta_board.board[move.board_row][move.board_col] = small_winner
-
-                # Verificar ganador en el meta-tablero
-                self.check_meta_winner()
-                return True
+        if not self.is_move_valid(move):
             return False
 
-    def check_meta_winner(self):
-            """Verifica si hay un ganador en el meta-tablero."""
+        # Realizar movimiento en el tablero pequeño
+        small_board = self.boards[move.board_row][move.board_col]
+        small_board.make_move(move.cell_row, move.cell_col, move.player)
+        
+        # Guardar en historial
+        self.move_history.append(move)
+
+        # Actualizar tablero activo basado en celda jugada
+        self.active_board = (move.cell_row, move.cell_col)
+
+        # Si el tablero pequeño tiene ganador, actualizar meta-tablero
+        if small_board.winner in [CellState.CROSS, CellState.CIRCLE]:
+            self.meta_board.board[move.board_row][move.board_col] = small_board.winner
             self.meta_board.check_winner()
             self.winner = self.meta_board.winner
-            return self.winner 
-    
-    def display(self) -> None:
-        """Muestra el tablero completo de Ultimate Tic-Tac-Toe en consola."""
-        if not self.valid_last_move:
-            return 
+
+        # Verificar empate global (todos los tableros terminados sin ganador)
+        if self.winner is None:
+            all_finished = all(
+                self.boards[i][j].winner is not None
+                for i in range(3) for j in range(3)
+            )
+            if all_finished:
+                self.winner = CellState.BLANK
+
+        # Cambiar turno DESPUÉS de que todo fue exitoso
+        self.current_player = (
+            CellState.CIRCLE if self.current_player == CellState.CROSS 
+            else CellState.CROSS
+        )
+        
+        return True
+
+    def get_all_valid_moves(self) -> List[UltimateMove]:
+        """Retorna todos los movimientos válidos posibles."""
+        moves = []
+        valid_boards = self.get_valid_boards()
+        
+        for br, bc in valid_boards:
+            small_board = self.boards[br][bc]
+            for cr in range(3):
+                for cc in range(3):
+                    if small_board.board[cr][cc] == CellState.BLANK:
+                        moves.append(UltimateMove(
+                            br, bc, cr, cc, self.current_player
+                        ))
+        return moves
+
+    def display(self) -> str:
+        """Retorna representación string del tablero completo."""
+        lines = []
         
         for meta_row in range(3):
             for row_offset in range(3):
-                line = ''
+                row_parts = []
                 for meta_col in range(3):
                     small_board = self.boards[meta_row][meta_col]
                     small_row = small_board.board[row_offset]
-                    small_line = ' '.join(cell.value for cell in small_row)
-                    if meta_col > 0:
-                        line += ' | '
-                    line += small_line
-                print(line)
-            if meta_row < 2:
-                print('-' * 21)
-        print("\n")
-
-    def winner_annoucement(self):
-        if self.game.winner:
-            print("The winner is", self.game.winner.value)
-        else:
-            print("There is no winner yet!.")
-
-
-# Use Example
-if __name__ == "__main__":
-    
-    example = input("What example do you want \n - Simple TicTacToe (1) \n - Ultimate TicTacToe (2)\n")
-    
-    if example==1:
-        game = TicTacToe()
-        moves= [
-                Move(1,1, CellState.CROSS),
-                Move(0,0, CellState.CIRCLE),
-                Move(1,0, CellState.CROSS),
-                Move(0,1, CellState.CIRCLE),
-                Move(1,2, CellState.CROSS)
-                ]
-        
-        for move in moves:
-            #print(move) 
-            game.make_move(move)
-            game.display()
-
-        print("The winner is ",game.winner.value)
-    else:
-        game = UltimateTicTacToe()
-        moves = [
-            UltimateMove(0, 0, 0, 0, CellState.CROSS),  # X en tablero (0,0), celda (0,0)
-            UltimateMove(0, 0, 1, 1, CellState.CIRCLE), # O en tablero (0,0), celda (1,1)
-            UltimateMove(1, 1, 0, 0, CellState.CROSS),  # X en tablero (1,1), celda (0,0)
-            UltimateMove(1, 1, 1, 1, CellState.CIRCLE), # O en tablero (1,1), celda (1,1)
-            UltimateMove(0, 0, 2, 2, CellState.CROSS),  # X en tablero (0,0), celda (2,2)
-        ]
-
-        for move in moves:
-            game.make_move(move)
-            game.display()
-        
-        if input("¿Continuar juego? sí[1]/no[0]") == "1":
-            print("Formato de entrada: ultimate_row ultimate_col row col team(0=X, 1=O)")
-            
-            while game.winner is None:
-                inputs = input().split()
+                    
+                    # Marcar tablero activo
+                    if self.active_board == (meta_row, meta_col) and small_board.winner is None:
+                        cells = [f"[{cell.value}]" if cell == CellState.BLANK else f" {cell.value} " 
+                                for cell in small_row]
+                    else:
+                        cells = [f" {cell.value} " for cell in small_row]
+                    
+                    row_parts.append("".join(cells))
                 
-                # Check good input 
-                if len(inputs)!=5:
-                    print("Invalid input, please retry\n")
-                    continue
+                lines.append(" ║ ".join(row_parts))
             
-                ## Parse String
-                ultimate_row = int(inputs[0])
-                ultimate_col = int(inputs[1])
-                row = int(inputs[2])
-                col = int(inputs[3])
-                team = CellState.CROSS if int(inputs[4]) == 0 else CellState.CIRCLE
-                move = UltimateMove(ultimate_row, ultimate_col, row, col, team)
-                game.make_move(move)
-                game.display()
-                print(game.active_board)
-            
-            game.winner_annoucement()
-
-
+            if meta_row < 2:
+                lines.append("═" * 11 + "╬" + "═" * 11 + "╬" + "═" * 11)
         
+        return "\n".join(lines)
 
+    def winner_announcement(self) -> str:
+        """Retorna mensaje del resultado."""
+        if self.winner is None:
+            return "Juego en progreso..."
+        elif self.winner == CellState.BLANK:
+            return "¡Empate!"
+        else:
+            return f"¡Ganador: {self.winner.value}!"
+
+
+if __name__ == "__main__":
+    game = UltimateTicTacToe()
+    
+    # Demo de movimientos
+    test_moves = [
+        UltimateMove(1, 1, 1, 1, CellState.CROSS),
+        UltimateMove(1, 1, 0, 0, CellState.CIRCLE),
+        UltimateMove(0, 0, 1, 1, CellState.CROSS),
+    ]
+    
+    for move in test_moves:
+        if game.make_move(move):
+            print(game.display())
+            print(f"Turno de: {game.current_player.value}")
+            print(f"Tablero activo: {game.active_board}")
+            print("-" * 40)
+        else:
+            print(f"Movimiento inválido: {move}")

@@ -1,0 +1,26 @@
+[
+  {
+    "episode": 500,
+    "eval": {
+      "win_rate": 0.35,
+      "loss_rate": 0.55,
+      "tie_rate": 0.1,
+      "avg_reward": 0.010000000000000014,
+      "avg_length": 27.3
+    },
+    "epsilon": 0.5387750000002125,
+    "avg_reward": 0.25260000000000005
+  },
+  {
+    "episode": 1000,
+    "eval": {
+      "win_rate": 0.25,
+      "loss_rate": 0.6,
+      "tie_rate": 0.15,
+      "avg_reward": -0.1575,
+      "avg_length": 29.25
+    },
+    "epsilon": 0.08366166666696118,
+    "avg_reward": 0.17340000000000003
+  }
+]
